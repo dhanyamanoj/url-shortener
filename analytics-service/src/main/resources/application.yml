@@ -1,0 +1,48 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: analytics-service
+  # Day 1: stubs only — enable when wiring Postgres/RabbitMQ consumer (Days 6–7)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+  datasource:
+    # Shared Supabase Postgres (urls + clicks). Prefer pooler URI in cloud.
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/urlshortener}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+  rabbitmq:
+    # CloudAMQP: 1 connection per JVM; durable queue; prefetch ≤10
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        prefetch: ${RABBITMQ_PREFETCH:10}
+        acknowledge-mode: auto
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  rabbitmq:
+    click-queue: ${CLICK_QUEUE:click.events}
+  analytics:
+    recent-limit: ${ANALYTICS_RECENT_LIMIT:20}
+
+logging:
+  level:
+    root: INFO
+    com.urlshortener: DEBUG

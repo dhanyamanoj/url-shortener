@@ -1,0 +1,52 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: shortener-service
+  # Day 1: stubs only — enable when wiring Postgres/Redis/RabbitMQ (Days 2–5)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+  datasource:
+    # Prefer Supabase pooler URI (transaction mode) in cloud; local compose uses DATABASE_URL
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/urlshortener}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:postgres}
+  data:
+    redis:
+      # Upstash Redis URL in cloud; local compose redis
+      url: ${REDIS_URL:redis://localhost:6379}
+  rabbitmq:
+    # CloudAMQP AMQP URL in cloud; local compose rabbitmq
+    # Keep 1 connection per JVM (Little Lemur free tier)
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    # Or set SPRING_RABBITMQ_ADDRESSES / cloud amqp URI via env later
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  short-url-base: ${SHORT_URL_BASE:http://localhost:8080}
+  redis:
+    cache-ttl-seconds: ${REDIS_CACHE_TTL_SECONDS:600}
+  rabbitmq:
+    click-queue: ${CLICK_QUEUE:click.events}
+
+logging:
+  level:
+    root: INFO
+    com.urlshortener: DEBUG
